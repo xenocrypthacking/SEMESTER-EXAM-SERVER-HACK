@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0x01 // Secure Breach Interface</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'main-blue': '#00BFFF',
+                        'light-blue': '#87CEFA', /* Blueish white text and glow color */
+                        'dark-bg-blue': '#0A1128',
+                        'dark-box-bg': '#1a1a1a',
+                        'error-red': '#FF0000',
+                        'error-dark-red': '#8B0000',
+                    },
+                    fontFamily: {
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    animation: {
+                        'text-blink-slow': 'text-blink-slow 2s ease-in-out infinite alternate', 
+                        'blink-red': 'blink-red 0.5s step-start infinite',
+                        'border-glow-pulse-blue': 'border-glow-pulse-blue 2s ease-in-out infinite alternate', 
+                        'glow-pulse-red': 'glow-pulse-red 0.5s ease-in-out infinite alternate', 
+                        'scan-line': 'scan-line 5s linear infinite',
+                    },
+                    keyframes: {
+                        'text-blink-slow': {
+                            '0%': { opacity: 1 },
+                            '50%': { opacity: 0.2 },
+                            '100%': { opacity: 1 }
+                        },
+                        'blink-red': {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: 0 },
+                        },
+                        'border-glow-pulse-blue': { 
+                            '0%': { opacity: 0.8, boxShadow: '0 0 10px rgba(135,206,250,0.6), 0 0 20px rgba(135,206,250,0.3)' },
+                            '100%': { opacity: 1, boxShadow: '0 0 15px rgba(0,191,255,0.8), 0 0 30px rgba(0,255,255,0.5)' },
+                        },
+                        'glow-pulse-red': {
+                            '0%, 100%': { boxShadow: '0 0 8px rgba(255,0,0,0.8), 0 0 15px rgba(255,0,0,0.5)' },
+                            '50%': { boxShadow: '0 0 15px rgba(255,100,100,1), 0 0 25px rgba(255,100,100,0.7)' },
+                        },
+                        'scan-line': {
+                            '0%': { backgroundPosition: '0% 0%' },
+                            '100%': { backgroundPosition: '100% 100%' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+        /* Base styles */
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #0A1128;
+            color: #87CEFA; /* Blueish white text */
+            overflow: hidden;
+            position: relative;
+            transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Circuit board background */
+        .circuit-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect x="0" y="0" width="100" height="100" fill="%230A1128"/><path d="M0 10 L100 10 M0 20 L100 20 M0 30 L100 30 M0 40 L100 40 M0 50 L100 50 M0 60 L100 60 M0 70 L100 70 M0 80 L100 80 M0 90 L100 90 M10 0 L10 100 M20 0 L20 100 M30 0 L30 100 M40 0 L40 100 M50 0 L50 100 M60 0 L60 100 M70 0 L70 100 M80 0 L80 100 M90 0 L90 100" fill="none" stroke="%23004080" stroke-width="0.5"/></svg>');
+            background-size: 50px 50px;
+            opacity: 0.2;
+            mask-image: linear-gradient(45deg, transparent 0%, rgba(0,0,0,0.8) 50%, transparent 100%);
+            mask-size: 200% 200%;
+            animation: scan-line 5s linear infinite;
+            z-index: -2;
+        }
+        
+        /* Central terminal box */
+        .terminal-box {
+            background-color: #1a1a1a;
+            border: 1px solid #00BFFF;
+            box-shadow: 0 0 15px rgba(0,191,255,0.7), 0 0 25px rgba(0,255,255,0.4);
+            transition: border-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            min-height: 250px;
+            max-width: 90vw; /* Responsive constraint */
+            width: 500px; /* Base width */
+            border-radius: 8px;
+        }
+
+        /* Corner frames */
+        .corner-frame {
+            position: fixed; 
+            width: 50px;
+            height: 50px;
+            border: 2px solid;
+            border-color: #87CEFA;
+            animation: border-glow-pulse-blue 2s ease-in-out infinite alternate; 
+            z-index: -1;
+            transition: border-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out, animation 0.5s ease-in-out;
+        }
+        .corner-frame.top-left { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+        .corner-frame.top-right { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+        .corner-frame.bottom-left { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+        .corner-frame.bottom-right { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+
+        /* Grade buttons container */
+        .grades-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 columns on desktop/tablet */
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+
+            /* Responsive adjustment for mobile */
+            @media (max-width: 640px) {
+                grid-template-columns: repeat(2, 1fr); /* 2 columns on small screens */
+                padding: 0 10px;
+            }
+        }
+
+        /* Grade buttons */
+        .grade-button {
+            background-color: #1B2C50; /* Dark blue background */
+            border: 1px solid #00BFFF;
+            color: #87CEFA;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,191,255,0.7);
+            border-radius: 4px;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            line-height: 1;
+        }
+        .grade-button:hover {
+            background-color: #00BFFF;
+            color: #0A1128;
+            box-shadow: 0 0 15px rgba(0,255,255,1);
+        }
+
+        /* Input field style */
+        .terminal-input {
+            background-color: #0A1128;
+            border: 1px solid #00BFFF;
+            color: #87CEFA;
+            font-family: 'Roboto Mono', monospace;
+            padding: 0.5rem;
+            text-align: center;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0,191,255,0.7);
+        }
+
+        /* Login button style */
+        .login-button {
+            background-color: #00BFFF;
+            color: #0A1128;
+            font-weight: bold;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            margin-top: 1rem;
+        }
+        .login-button:hover {
+            background-color: #87CEFA;
+            box-shadow: 0 0 15px rgba(0,255,255,1);
+        }
+
+        /* Error state styling */
+        body.error-state {
+            background-color: #8B0000;
+            color: #FF0000; /* Solid Red Text */
+            animation: none; /* Stop blue animation */
+        }
+        body.error-state .terminal-box {
+            border-color: #FF0000;
+            box-shadow: 0 0 15px rgba(255,0,0,0.7), 0 0 25px rgba(255,0,0,0.4);
+        }
+        body.error-state .corner-frame {
+            border-color: #FF0000;
+            animation: glow-pulse-red 0.5s ease-in-out infinite alternate;
+        }
+        
+        /* Utility for slow blue text blinking */
+        .text-slow-blink {
+            animation: text-blink-slow 2s ease-in-out infinite alternate;
+        }
+
+        /* Specific error text styling: Solid Red, no glow */
+        body.error-state #main-display {
+            text-shadow: none !important;
+            color: #FF0000 !important;
+        }
+        
+        /* Specific login error text styling */
+        .login-error {
+            color: #FF0000;
+            text-shadow: 0 0 5px #FF0000;
+            animation: blink-red 0.5s step-start infinite;
+        }
+    </style>
+</head>
+<body id="app-body">
+
+    <!-- Circuit board background -->
+    <div class="circuit-background"></div>
+
+    <!-- Corner frames -->
+    <div class="corner-frame top-left"></div>
+    <div class="corner-frame top-right"></div>
+    <div class="corner-frame bottom-left"></div>
+    <div class="corner-frame bottom-right"></div>
+
+    <main class="terminal-box">
+        <div id="main-display" class="text-xl sm:text-3xl lg:text-5xl text-center tracking-widest font-bold text-shadow p-2 transition-all duration-500" 
+             style="text-shadow: 0 0 10px #87CEFA, 0 0 20px #00BFFF;">
+            SYSTEM ACCESS REQUIRED
+        </div>
+        <div id="sub-display" class="text-lg sm:text-xl mt-4 hidden"></div>
+
+        <!-- NEW: Login Form -->
+        <div id="login-form" class="mt-8 flex flex-col items-center">
+            <input type="password" id="passcode-input" class="terminal-input text-lg sm:text-xl w-40" maxlength="4" placeholder="[ PASSCODE ]">
+            <button id="hack-button" class="login-button" onclick="handleLogin()">ENTER</button>
+            <div id="login-error-message" class="text-sm mt-4 hidden"></div>
+        </div>
+
+        <div id="grade-selection" class="hidden grades-grid mt-8">
+            <!-- Grade buttons inserted here -->
+        </div>
+    </main>
+
+    <script>
+        // --- Configuration ---
+        const SECRET_PASSCODE = "4815";
+        
+        // --- Globals and DOM Elements ---
+        const mainDisplay = document.getElementById('main-display');
+        const subDisplay = document.getElementById('sub-display');
+        const gradeSelection = document.getElementById('grade-selection');
+        const appBody = document.getElementById('app-body');
+        const loginForm = document.getElementById('login-form');
+        const passcodeInput = document.getElementById('passcode-input');
+        const loginErrorMessage = document.getElementById('login-error-message');
+        const grades = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+
+        let currentTimeout = null;
+        let currentLoopInterval = null;
+
+        // --- Core Functions ---
+
+        /** Updates the main text display and controls the blinking class. */
+        function updateDisplay(text, isBlinking = false, subText = "") {
+            mainDisplay.textContent = text;
+            
+            // Apply or remove the slow, smooth blue blinking effect
+            mainDisplay.classList.toggle('text-slow-blink', isBlinking);
+
+            if (subText) {
+                subDisplay.textContent = subText;
+                subDisplay.classList.remove('hidden');
+            } else {
+                subDisplay.classList.add('hidden');
+            }
+            gradeSelection.classList.add('hidden');
+            loginForm.classList.add('hidden'); // Hide login form in all non-login states
+            
+            // Ensure error-state fast blinking is removed in non-error states
+            mainDisplay.classList.remove('animate-blink-red');
+            appBody.classList.remove('error-state'); // Reset theme
+        }
+
+        /** Handles the login attempt. */
+        function handleLogin() {
+            const enteredCode = passcodeInput.value.trim();
+            loginErrorMessage.classList.add('hidden'); // Hide any previous error
+
+            if (enteredCode === SECRET_PASSCODE) {
+                updateDisplay("ACCESS GRANTED", false);
+                // Start the main sequence after a brief pause
+                currentTimeout = setTimeout(startInitialSequence, 1500);
+            } else {
+                loginErrorMessage.textContent = "INVALID CODE. ACCESS DENIED.";
+                loginErrorMessage.classList.remove('hidden');
+                loginErrorMessage.classList.add('login-error'); // Apply blinking red error style
+                passcodeInput.value = ''; // Clear input
+                
+                // Remove error style after a short time
+                setTimeout(() => {
+                    loginErrorMessage.classList.remove('login-error');
+                }, 1000);
+            }
+        }
+        
+        /** Changes the entire theme to the red error state (Phase 5). */
+        function triggerErrorTheme() {
+            // Stop any ongoing timeouts or loops
+            if (currentTimeout) clearTimeout(currentTimeout);
+            if (currentLoopInterval) clearInterval(currentLoopInterval);
+
+            // Apply error styles
+            appBody.classList.add('error-state');
+            
+            // Set error text with dramatic blinking
+            mainDisplay.classList.add('animate-blink-red');
+            mainDisplay.classList.remove('text-slow-blink');
+            
+            mainDisplay.textContent = "ERROR DOWNLOADING";
+            subDisplay.classList.add('hidden');
+        }
+
+        // --- Phase Logic (Starts only after successful login) ---
+
+        /** PHASE 1: HACKING Sequence (10 seconds total) */
+        function startInitialSequence() {
+            // 1. HACKING (0 - 7s)
+            updateDisplay("HACKING", true);
+
+            // 2. HACKING SUCCESSFUL (7s - 10s)
+            currentTimeout = setTimeout(() => {
+                updateDisplay("HACKING SUCCESSFUL", false);
+
+                // Start Phase 2 Loop
+                currentTimeout = setTimeout(startConnectingLoop, 3000);
+
+            }, 7000);
+        }
+
+        /** PHASE 2: CONNECTING / SEMESTER EXAM Loop (60 seconds) */
+        function startConnectingLoop() {
+            if (currentLoopInterval) clearInterval(currentLoopInterval);
+            if (currentTimeout) clearTimeout(currentTimeout);
+            
+            const totalLoopDuration = 60000; // 1 minute
+            const cycleDuration = 6000;      // 6 seconds total per cycle
+            const connectingDuration = 4000; // 4 seconds
+            
+            let startTime = Date.now();
+
+            function runCycle() {
+                if (Date.now() - startTime >= totalLoopDuration) {
+                    clearInterval(currentLoopInterval);
+                    handleLoopEnd();
+                    return;
+                }
+
+                // 1. CONNECTING (4s)
+                updateDisplay("CONNECTING", true);
+                subDisplay.textContent = "";
+
+                // 2. SEMESTER EXAM SERVER (2s)
+                setTimeout(() => {
+                    if (Date.now() - startTime < totalLoopDuration) {
+                        updateDisplay("SEMESTER EXAM SERVER", true);
+                    }
+                }, connectingDuration);
+            }
+            
+            // Start the cycle and the interval
+            runCycle();
+            currentLoopInterval = setInterval(runCycle, cycleDuration);
+
+            // Set a single master timeout to ensure termination after 60 seconds total
+            currentTimeout = setTimeout(() => {
+                clearInterval(currentLoopInterval);
+                currentLoopInterval = null;
+                handleLoopEnd();
+            }, totalLoopDuration);
+        }
+        
+        /** PHASE 3 Triggered: CONNECTED and Show Grades */
+        function handleLoopEnd() {
+            // Clear any lingering sub-timeouts
+            if (currentTimeout) clearTimeout(currentTimeout);
+
+            updateDisplay("CONNECTED", false);
+            // Give a brief moment for "CONNECTED" to register before showing grades
+            setTimeout(showGradeSelection, 1000);
+        }
+
+
+        /** PHASE 3: Show Grade Selection */
+        function showGradeSelection() {
+            updateDisplay("SELECT THE GRADE", false);
+            gradeSelection.classList.remove('hidden');
+
+            gradeSelection.innerHTML = '';
+            grades.forEach(grade => {
+                const button = document.createElement('button');
+                button.textContent = `GRADE ${grade}`;
+                // Tailwind classes for buttons
+                button.className = 'grade-button font-semibold';
+                button.onclick = () => handleGradeSelection(grade);
+                gradeSelection.appendChild(button);
+            });
+        }
+
+        /** PHASE 4 & 5: Handle Selection and Download Sequence */
+        function handleGradeSelection(grade) {
+            // 1. Show CONNECTING (2 seconds)
+            updateDisplay(`CONNECTING TO GRADE ${grade} SERVER...`, false);
+            gradeSelection.classList.add('hidden');
+            
+            if (currentTimeout) clearTimeout(currentTimeout);
+
+            currentTimeout = setTimeout(() => {
+                // 2. STARTING DOWNLOAD (1 minute)
+                updateDisplay("STARTING DOWNLOAD", true);
+                
+                // 3. Trigger ERROR DOWNLOADING (After 1 minute of download)
+                const downloadDuration = 60 * 1000; // 1 minute download
+                currentTimeout = setTimeout(() => {
+                    triggerErrorTheme();
+                }, downloadDuration);
+
+            }, 2000); // 2 seconds for CONNECTING
+        }
+
+        // --- Initializer ---
+        function initLoginState() {
+            mainDisplay.textContent = "SYSTEM ACCESS REQUIRED";
+            mainDisplay.classList.remove('text-slow-blink');
+            loginForm.classList.remove('hidden');
+            passcodeInput.focus();
+            
+            // Allow ENTER key to trigger login
+            passcodeInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    handleLogin();
+                }
+            });
+        }
+
+        // Initialize the app on page load to the login state
+        window.onload = initLoginState;
+    </script>
+</body>
+</html>
+
